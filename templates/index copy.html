@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Transcription</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        #progress-container {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            background-color: #4CAF50;
+        }
+
+        #download-link-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Enter YouTube URL</h2>
+    <form id="transcription-form" action="/" method="post">
+        <input type="text" name="url" placeholder="Enter YouTube URL" required>
+        <input type="submit" value="Transcribe">
+    </form>
+    <br>
+    <div id="progress-container">
+        <div id="progress-bar">0%</div>
+    </div>
+    <br>
+    <div id="download-link-container">
+        <h3>Your transcript is ready!</h3>
+        <a id="download-link" href="#">Download Transcript</a>
+    </div>
+    <script>
+        document.getElementById('transcription-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            socket.emit('start_transcription', {url: e.target.url.value});
+
+            document.getElementById('progress-container').style.display = 'block';
+
+            socket.on('progress', function(data) {
+                document.getElementById("progress-bar").textContent = data.data + '%';
+                document.getElementById("progress-bar").style.width = data.data + '%';
+            });
+
+            socket.on('done', function(data) {
+                var downloadLinkContainer = document.getElementById('download-link-container');
+                var downloadLink = document.getElementById('download-link');
+
+                downloadLink.href = "/download_page/" + data.data;
+                downloadLinkContainer.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
